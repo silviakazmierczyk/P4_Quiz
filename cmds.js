@@ -141,7 +141,7 @@ exports.editCmd = (socket, rl, id) => {
 		rl.prompt();
 	});
 };
-exports.testCmd = (socket, rl, id) =>{
+/* exports.testCmd = (socket, rl, id) =>{
 	validateId(id)
 	.then(id => models.quiz.findById(id))
 	.then(quiz => {
@@ -172,6 +172,37 @@ exports.testCmd = (socket, rl, id) =>{
 		rl.prompt();
 	});
     });
+};
+*/
+exports.testCmd = (socket, rl, id) =>{
+	validateId(id)
+	.then(id => models.quiz.findById(id))
+	.then(quiz => {
+		if (!quiz) {
+			throw new Error (`No existe un quiz asociado al id=${id}.`);
+            rl.prompt();
+		}
+	return makeQuestion (rl, quiz.question + "? ")
+	.then (q => {
+		if (q.toLowerCase().trim() === quiz.answer.toLowerCase()){
+			log(socket, `Su respuesta es correcta:`);
+			biglog(socket, 'Correcta', 'green');
+		} else {
+			log(socket, `Su respuesta es incorrecta:`);
+			biglog(socket, 'Incorrecta', 'green');
+		}
+	})
+	.catch(Sequelize.ValidationError, error => {
+		errorlog(socket, 'El quiz es erróneo:');
+		error.errors.forEach(({message}) => errorlog(socket, message));
+	})
+	.catch (error =>  {
+		errorlog(socket, error.message);
+	})
+	.then(() => {	
+		rl.prompt();
+	});
+	});
 };
 exports.playCmd = (socket, rl) => {
 	let score = 0;

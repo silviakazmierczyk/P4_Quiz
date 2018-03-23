@@ -16,13 +16,6 @@ exports.helpCmd = (socket, rl) => {
   	log(socket, "q|quit - Salir del programa.");
   	rl.prompt();
 };
-const makeQuestion = (socket, rl, text) => {
-	return new Sequelize.Promise ((resolve, reject) => {
-		rl.question(colorize(text, 'red'), answer => {
-			resolve(answer.trim());
-		});
-	});
-};	
 const validateId = id => {
 	return new Sequelize.Promise((resolve, reject) => {
 		if (typeof id === "undefined") {
@@ -37,6 +30,14 @@ const validateId = id => {
 		}		
 	});
 };
+const makeQuestion = (rl, text) => {
+	return new Sequelize.Promise ((resolve, reject) => {
+		rl.question(colorize(text, 'red'), answer => {
+			resolve(answer.trim());
+		});
+	});
+};	
+
 exports.listCmd = (socket, rl) => {
 	models.quiz.findAll()
 	.each(quiz => {
@@ -70,9 +71,9 @@ exports.showCmd = (socket, rl, id) => {
 
 
 exports.addCmd = (socket, rl) => {
-	makeQuestion (socket, rl, 'Introduzca una pregunta: ')
+	makeQuestion (rl, 'Introduzca una pregunta: ')
 	.then(q => {
-		return makeQuestion(socket, rl, ' Introduzca la respuesta ')
+		return makeQuestion(rl, ' Introduzca la respuesta ')
 		.then(a => {
 			return {question: q, answer: a};
 		});
@@ -111,10 +112,10 @@ exports.editCmd = (socket, rl, id) => {
 		if (!quiz) {
 			throw new Error (`No existe un quiz asociado al id=${id}.`);
 		}
-		//process.stdout.isTTY && setTimeout(() => {rl.write(quiz.question)}, 0);
+		process.stdout.isTTY && setTimeout(() => {rl.write(quiz.question)}, 0);
 		return makeQuestion(rl, ' Introduzca una pregunta: ')
 		.then (q => {
-			//process.stdout.isTTY && setTimeout(() => {rl.write(quiz.answer)}, 0);
+			process.stdout.isTTY && setTimeout(() => {rl.write(quiz.answer)}, 0);
 			return makeQuestion(rl, ' Introduzca la respuesta ')
 			.then(a => {
 				quiz.question = q;

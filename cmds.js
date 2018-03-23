@@ -16,7 +16,19 @@ exports.helpCmd = (socket, rl) => {
   	log(socket, "q|quit - Salir del programa.");
   	rl.prompt();
 };
-const validateId = id => {
+exports.listCmd = (socket, rl) => {
+	models.quiz.findAll()
+	.each(quiz => {
+			log(socket, ` [${colorize(quiz.id, 'magenta')}]: ${quiz.question}`);
+	})
+	.catch(error => {
+		errorlog(socket, error.message);
+	})
+	.then(() => {
+		rl.prompt();
+	});
+};
+const validateId = (id) => {
 	return new Sequelize.Promise((resolve, reject) => {
 		if (typeof id === "undefined") {
 			reject(new Error(`Falta el parámetro <id>`));
@@ -38,18 +50,6 @@ const makeQuestion = (rl, text) => {
 	});
 };	
 
-exports.listCmd = (socket, rl) => {
-	models.quiz.findAll()
-	.each(quiz => {
-			log(socket, ` [${colorize(quiz.id, 'magenta')}]: ${quiz.question}`);
-	})
-	.catch(error => {
-		errorlog(socket, error.message);
-	})
-	.then(() => {
-		rl.prompt();
-	});
-};
 
 exports.showCmd = (socket, rl, id) => {
 	validateId(id)
@@ -78,9 +78,9 @@ exports.addCmd = (socket, rl) => {
 			return {question: q, answer: a};
 		});
 	})
-	.then (quiz => {
-		return models.quiz.create(quiz);
-	})
+	//.then (quiz => {
+		//return models.quiz.create(quiz);
+	//})
 	.then ((quiz) => {
 		log (socket, ` ${colorize('Se ha añadido', 'magenta')}: ${quiz.question} ${colorize('=>', 'magenta')} ${quiz.answer}`);
 	})
@@ -147,10 +147,12 @@ exports.testCmd = (socket, rl, id) =>{
 	.then(quiz => {
 		if (!quiz) {
 			throw new Error (`No existe un quiz asociado al id=${id}.`);
+            rl.prompt();
 		}
+    
 	return makeQuestion (rl, quiz.question + "? ")
 	.then (q => {
-		if (quiz.toLowerCase().trim() === q.answer.toLowerCase().trim()){
+		if (quiz === q.answer.){
 			log(socket, `Su respuesta es correcta:`);
 			biglog(socket, 'Correcta', 'green');
 		} else {
@@ -158,6 +160,7 @@ exports.testCmd = (socket, rl, id) =>{
 			biglog(socket, 'Incorrecta', 'green');
 		}
 	})
+
 	.catch(Sequelize.ValidationError, error => {
 		errorlog(socket, 'El quiz es erróneo:');
 		error.errors.forEach(({message}) => errorlog(socket, message));
@@ -168,7 +171,7 @@ exports.testCmd = (socket, rl, id) =>{
 	.then(() => {	
 		rl.prompt();
 	});
-	});
+    });
 };
 exports.playCmd = (socket, rl) => {
 	let score = 0;

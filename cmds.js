@@ -16,18 +16,13 @@ exports.helpCmd = (socket, rl) => {
   	log(socket, "q|quit - Salir del programa.");
   	rl.prompt();
 };
-exports.listCmd = (socket, rl) => {
-	models.quiz.findAll()
-	.each(quiz => {
-			log(socket, ` [${colorize(quiz.id, 'magenta')}]: ${quiz.question}`);
-	})
-	.catch(error => {
-		errorlog(socket, error.message);
-	})
-	.then(() => {
-		rl.prompt();
+const makeQuestion = (socket, rl, text) => {
+	return new Sequelize.Promise ((resolve, reject) => {
+		rl.question(colorize(text, 'red'), answer => {
+			resolve(answer.trim());
+		});
 	});
-};
+};	
 const validateId = id => {
 	return new Sequelize.Promise((resolve, reject) => {
 		if (typeof id === "undefined") {
@@ -42,6 +37,19 @@ const validateId = id => {
 		}		
 	});
 };
+exports.listCmd = (socket, rl) => {
+	models.quiz.findAll()
+	.each(quiz => {
+			log(socket, ` [${colorize(quiz.id, 'magenta')}]: ${quiz.question}`);
+	})
+	.catch(error => {
+		errorlog(socket, error.message);
+	})
+	.then(() => {
+		rl.prompt();
+	});
+};
+
 exports.showCmd = (socket, rl, id) => {
 	validateId(id)
 	.then (id => models.quiz.findById(id))
@@ -58,19 +66,13 @@ exports.showCmd = (socket, rl, id) => {
 		rl.prompt();
 	});
 };
-const makeQuestion = (rl, text) => {
-	return new Sequelize.Promise ((resolve, reject) => {
-		rl.question(colorize(text, 'red'), answer => {
-			resolve(answer.trim());
-		});
-	});
-};	
+
 
 
 exports.addCmd = (socket, rl) => {
-	makeQuestion (rl, 'Introduzca una pregunta: ')
+	makeQuestion (socket, rl, 'Introduzca una pregunta: ')
 	.then(q => {
-		return makeQuestion(rl, ' Introduzca la respuesta ')
+		return makeQuestion(socket, rl, ' Introduzca la respuesta ')
 		.then(a => {
 			return {question: q, answer: a};
 		});
@@ -109,10 +111,10 @@ exports.editCmd = (socket, rl, id) => {
 		if (!quiz) {
 			throw new Error (`No existe un quiz asociado al id=${id}.`);
 		}
-		process.stdout.isTTY && setTimeout(() => {rl.write(quiz.question)}, 0);
+		//process.stdout.isTTY && setTimeout(() => {rl.write(quiz.question)}, 0);
 		return makeQuestion(rl, ' Introduzca una pregunta: ')
 		.then (q => {
-			process.stdout.isTTY && setTimeout(() => {rl.write(quiz.answer)}, 0);
+			//process.stdout.isTTY && setTimeout(() => {rl.write(quiz.answer)}, 0);
 			return makeQuestion(rl, ' Introduzca la respuesta ')
 			.then(a => {
 				quiz.question = q;
@@ -147,7 +149,7 @@ exports.testCmd = (socket, rl, id) =>{
 		}
 	return makeQuestion (rl, quiz.question + "? ")
 	.then (q => {
-		if (quiz.toUpperCase().trim() === q.answer.toUpperCase().trim()){
+		if (quiz.toLowerCase().trim() === q.answer.toLowerCase().trim()){
 			log(socket, `Su respuesta es correcta:`);
 			biglog(socket, 'Correcta', 'green');
 		} else {
@@ -184,7 +186,7 @@ exports.playCmd = (socket, rl) => {
 			toBeResolved.splice(id, 1);
 			return makeQuestion (rl, colorize(quiz.question + '?', 'red' ))
 			.then(answer => {
-				if (answer.toUpperCase().trim() === quiz.answer.toUpperCase().trim()){
+				if (answer.toLowerCase().trim() === quiz.answer.toLowerCase().trim()){
 					score++;
 					log(socket, `CORRECTO - Lleva ${score} aciertos` );
 					resolve(playOne());

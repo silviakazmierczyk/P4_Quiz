@@ -152,7 +152,7 @@ exports.testCmd = (socket, rl, id) =>{
     
 	return makeQuestion (rl, quiz.question + "? ")
 	.then (q => {
-		if (quiz === q.answer.){
+		if (quiz.toLowerCase().trim() === q.answer.toLowerCase().trim()){
 			log(socket, `Su respuesta es correcta:`);
 			biglog(socket, 'Correcta', 'green');
 		} else {

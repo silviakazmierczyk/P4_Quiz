@@ -181,7 +181,7 @@ exports.testCmd = (socket, rl, id) =>{
 	.then(quiz => {
 		if (!quiz) {
 			throw new Error (`No existe un quiz asociado al id=${id}.`);
-        else if(typeof id ==="undefined"){
+        if(typeof id ==="undefined"){
                errorlog (socket, `Falta el parametro id.`);
                rl.prompt();
              }

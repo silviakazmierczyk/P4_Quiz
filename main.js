@@ -6,43 +6,21 @@ const cmds =require("./cmds");
 
 const net = require("net");
 
-
-
-//cada vez que se conecta un cliente
-
-
-
 net.createServer(socket =>{
 
 
 
     console.log("Se ha conectado un cliente desde" + socket.remoteAddress);
 
-
-
-
-
-//para importar todas las sentencias de model que nos hemos llevado a otra clase para que el
-
-// Main no sea tan sumamente grande.
-
-// Se pone asi porque es un fichero local
-
-
-
-//sale el mensaje de bienvenida
-
     biglog(socket, 'CORE Quiz', 'green');
 
 
-
-//figuro el readline, lee del teclado y saca de la pantalla
 
     const rl = readline.createInterface({
 
         input: socket,
 
-        output: socket,//nos pinta de color azul el prompt
+        output: socket,
 
         prompt: colorize("quiz > ", 'blue'),
 
@@ -52,8 +30,6 @@ net.createServer(socket =>{
 
             const hits = completions.filter((c) => c.startsWith(line));
 
-            // show all completions if none found
-
             return [hits.length ? hits : completions, line];
 
         }
@@ -61,20 +37,12 @@ net.createServer(socket =>{
     });
 
 
-
-    //atender los eventos de los sockets
-
     socket
 
         .on("end", ()=>{rl.close()})
 
         .on("error", ()=>{rl.close()})
 
-
-
-
-
-//sale el prompt
 
     rl.prompt();
 
@@ -93,18 +61,11 @@ net.createServer(socket =>{
 
 
             switch (cmd){
-
-                //caso de vacío no me retorna nada
-
                 case '':
-
-                    //como esta función no la tenemos definida ponemos el prompt
-
                     rl.prompt();
 
                     break;
 
-                //mensajes de erro
 
                 case   'h':
 
@@ -178,8 +139,6 @@ net.createServer(socket =>{
 
                     log(socket, `Comando desconocido: '${colorize(cmd,'red')}'`);
 
-                    //cuando el comando es desconocido además meto color y una llamada para ello al método colorize
-
                     log(socket, `Use ${colorize('help','green')} para ver todos los comandos disponibles.`);
 
                     rl.prompt();
@@ -187,10 +146,6 @@ net.createServer(socket =>{
                     break;
 
             }
-
-            //movemos el prompt porque son procesos asíncornos en los que el programa sigue trabajando aunque haya
-
-            //impreso ya información. Lo vamos a poner dentro de cada método
 
             rl.prompt();
 
@@ -200,7 +155,7 @@ net.createServer(socket =>{
 
             log(socket, 'Adios');
 
-           // process.exit(0); //la quitamos porq mata el servidor
+           // process.exit(0); // lo quito porque mata mi servidor
 
         });
 

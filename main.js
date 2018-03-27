@@ -1,197 +1,213 @@
 const readline = require('readline');
 
-const {log, biglog, errorlog, colorize} = require("./out");
-const model = require('./model');
-const cmds = require("./cmds");
+const { log, biglog, errorlog, colorize} =require("./out");
+
+const cmds =require("./cmds");
+
 const net = require("net");
 
-net.createServer(socket => {
-  console.log("Se ha conectado un cliente desde " + socket.remoteAddress);
 
 
+//cada vez que se conecta un cliente
 
-// Mensaje inicial
 
-biglog(socket, 'CORE Quiz', 'green');
 
+net.createServer(socket =>{
 
 
 
+    console.log("Se ha conectado un cliente desde" + socket.remoteAddress);
 
-const rl = readline.createInterface({
 
-  input: socket,
 
-  output: socket,
 
-  prompt: colorize("quiz > ", 'blue'),
 
-  completer: (line) => {
+//para importar todas las sentencias de model que nos hemos llevado a otra clase para que el
 
-      const completions = 'h help add delete edit list test p play quit q'.split(' ');
+// Main no sea tan sumamente grande.
 
-      const hits = completions.filter((c) => c.startsWith(line));
+// Se pone asi porque es un fichero local
 
-    // show all completions if none found
 
-      return [hits.length ? hits : completions, line];
 
-  }
+//sale el mensaje de bienvenida
 
+    biglog(socket, 'CORE Quiz', 'green');
 
 
-});
 
+//figuro el readline, lee del teclado y saca de la pantalla
 
+    const rl = readline.createInterface({
 
-socket
+        input: socket,
 
-.on("end", () => {rl.close(); })
+        output: socket,//nos pinta de color azul el prompt
 
-.on("error", () => {rl.close(); });
+        prompt: colorize("quiz > ", 'blue'),
 
+        completer: (line) => {
 
+            const completions = 'h help quit q add list show test play p'.split(' ');
 
-rl.prompt();
+            const hits = completions.filter((c) => c.startsWith(line));
 
+            // show all completions if none found
 
+            return [hits.length ? hits : completions, line];
 
-rl
+        }
 
-.on('line', (line) => {
+    });
 
 
 
-  let args = line.split(" ");
+    //atender los eventos de los sockets
 
-  let cmd = args[0].toLowerCase().trim();
+    socket
 
+        .on("end", ()=>{rl.close()})
 
+        .on("error", ()=>{rl.close()})
 
-  switch (cmd) {
 
 
 
-    case '':
 
-      rl.prompt();
+//sale el prompt
 
-      break;
+    rl.prompt();
 
 
 
-    case 'h':
+    rl
 
-    case 'help':
+        .on('line', (line) => {
 
-      cmds.helpCmd(socket, rl);
 
-      break;
 
+            let args = line.split(" ");
 
+            let cmd = args[0].toLowerCase().trim();
 
-    case 'quit':
 
-    case 'q':
 
-      cmds.quitCmd(socket, rl);
+            switch (cmd){
 
-      break
+                //caso de vacío no me retorna nada
 
+                case '':
 
+                    //como esta función no la tenemos definida ponemos el prompt
 
-    case 'add':
+                    rl.prompt();
 
-      cmds.addCmd(socket, rl);
+                    break;
 
-      break;
+                //mensajes de erro
 
+                case   'h':
 
+                case 'help':
 
-    case 'list':
+                    cmds.helpCmd(socket, rl);
 
-      cmds.listCmd(socket, rl);
+                    break;
 
-      break;
+                case 'quit':
 
+                case 'q':
 
+                    cmds.quitCmd(socket, rl);
 
-    case 'show':
+                    break;
 
-      cmds.showCmd(socket, rl, args[1]);
+                case 'add':
 
-      break;
+                    cmds.addCmd(socket, rl);
 
+                    break;
 
+                case 'list':
 
-    case 'test':
+                    cmds.listCmd(socket, rl);
 
-      cmds.testCmd(socket, rl, args[1]);
+                    break;
 
-      break;
+                case 'show':
 
-      
+                    cmds.showCmd(socket, rl,args[1]);
 
-    case 'play':
+                    break;
 
-    case 'p':
+                case 'test':
 
-      cmds.playCmd(socket, rl);
+                    cmds.testCmd(socket, rl,args[1]);
 
-      break;
+                    break;
 
-      
+                case 'play':
 
-    case 'delete':
+                case  'p':
 
-      cmds.deleteCmd(socket, rl, args[1]);
+                    cmds.playCmd(socket, rl);
 
-      break;
+                    break;
 
-      
+                case 'delete':
 
-    case 'edit':
+                    cmds.deleteCmd(socket, rl,args[1]);
 
-      cmds.editCmd(socket, rl, args[1]);
+                    break;
 
-      break;        
+                case 'edit':
 
+                    cmds.editCmd(socket, rl,args[1]);
 
+                    break;
 
-    case 'credits':
+                case 'credits':
 
-      cmds.creditsCmd(socket, rl);
+                    cmds.creditsCmd(socket, rl);
 
-        break;
+                    break;
 
 
 
-    default:
+                default:
 
-      log(socket, `Comando desconocido: '${colorize(cmd, 'red')}'`);
+                    log(socket, `Comando desconocido: '${colorize(cmd,'red')}'`);
 
-      log(socket, `Use ${colorize('help', 'green')} para ver todos los comandos disponibles`);
+                    //cuando el comando es desconocido además meto color y una llamada para ello al método colorize
 
-      rl.prompt();
+                    log(socket, `Use ${colorize('help','green')} para ver todos los comandos disponibles.`);
 
-      break;
+                    rl.prompt();
 
-  }
+                    break;
+
+            }
+
+            //movemos el prompt porque son procesos asíncornos en los que el programa sigue trabajando aunque haya
+
+            //impreso ya información. Lo vamos a poner dentro de cada método
+
+            rl.prompt();
+
+        })
+
+        .on('close',() => {
+
+            log(socket, 'Adios');
+
+           // process.exit(0); //la quitamos porq mata el servidor
+
+        });
+
+
 
 
 
 })
 
-.on('close', () => {
-
-  log(socket, 'Adiós');
-
-  //process.exit(0);
-
-});
-
-})
-
-
-
-.listen(3030);
+.listen(3030); //escucha en el puerto 3030

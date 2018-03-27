@@ -60,8 +60,8 @@ exports.showCmd = (socket, rl, id) => {
 		}
 		log(socket, ` [${colorize(quiz.id, 'magenta')}]: ${quiz.question} ${colorize( '=>', 'magenta')} ${quiz.answer} `);
 	})
-	.catch (socket, error => {
-		errorlog(error.message);
+	.catch (error => {
+		errorlog(socket, error.message);
 	})
 	.then(() => {
 		rl.prompt();
@@ -86,7 +86,7 @@ exports.addCmd = (socket, rl) => {
 	})
 	.catch(Sequelize.ValidationError, error => {
 		errorlog(socket, 'El quiz es erróneo:');
-		error.errors.forEach(({message}) => errorlog(socket, message));
+		error.errors.forEach(({message}) => errorlog(message));
 	})
 	.catch(error=> {
 		errorlog(socket, error.message);
@@ -100,6 +100,7 @@ exports.deleteCmd = (socket, rl, id) => {
 	.then(id => models.quiz.destroy({where: {id}}))
 	.catch(error => {
 		errorlog(socket, error.message);
+        rl.prompt();
 	})
 	.then(() => {
 		rl.prompt();
@@ -132,7 +133,7 @@ exports.editCmd = (socket, rl, id) => {
 	})
 	.catch(Sequelize.ValidationError, error => {
 		errorlog(socket, 'El quiz es erróneo:');
-		error.errors.forEach(({message}) => errorlog(socket, message));
+		error.errors.forEach(({message}) => errorlog(message));
 	})
 	.catch (error =>  {
 		errorlog(socket, error.message);
@@ -179,22 +180,19 @@ exports.testCmd = (socket, rl, id) =>{
 	.then(id => models.quiz.findById(id))
 	.then(quiz => {
 		if (!quiz) {
-			throw new Error (`No existe un quiz asociado al id=${id}.`);
-            rl.prompt();
+			throw new Error (`No existe un quiz asociado al id=${id}.`);    
 		}
-	return makeQuestion (rl, quiz.question + "? ")
-	.then (q => {
-		if (q.toLowerCase().trim() === quiz.answer.toLowerCase()){
+	makeQuestion (rl, quiz.question + "? ")
+	.then (a => {
+		if (quiz.answer.toLowerCase()).trim() === a.toLowerCase().trim()){
 			log(socket, `Su respuesta es correcta:`);
 			biglog(socket, 'Correcta', 'green');
+            rl.prompt();
 		} else {
 			log(socket, `Su respuesta es incorrecta:`);
 			biglog(socket, 'Incorrecta', 'green');
+            rl.prompt();
 		}
-	})
-	.catch(Sequelize.ValidationError, error => {
-		errorlog(socket, 'El quiz es erróneo:');
-		error.errors.forEach(({message}) => errorlog(socket, message));
 	})
 	.catch (error =>  {
 		errorlog(socket, error.message);

@@ -524,7 +524,7 @@ exports.creditsCmd = (socket, rl) => {
 
    log(socket, 'Autora de la práctica:');
 
-   log(socket, 'TERESA');
+   log(socket, 'SYLWIA');
 
     rl.prompt();
 

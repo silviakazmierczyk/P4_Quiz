@@ -337,209 +337,96 @@ exports.editCmd = (socket, rl, id) => {
  * @param id Clave del quiz a probar en el modelo.
 
  */
-
 exports.testCmd = (socket, rl,id) => {
-
     validateId(id)
-
         .then(id => models.quiz.findById(id))
-
         .then(quiz => {
-
             if (!quiz){
-
                 throw new Error(`No existe un quiz asociado al id=${id}.`);
-
             }
-
-
-
             log(socket, `[${colorize(quiz.id,'magenta')}]: ${quiz.question}: `);
-
             return makeQuestion(rl, '')
-
                 .then(r => {
-
-
-
                     if(quiz.answer.toUpperCase().trim() === r.toUpperCase().trim()){
-
-
-
-                        log(socket, "\b CORRECTO");
-
+                        log(socket, "CORRECTO");
                         biglog(socket, 'Correcta', 'green');
-
-
-
                     } else{
-
-
-
-                        log(socket, "\b INCORRECTO");
-
+                        log(socket, "INCORRECTO");
                         biglog(socket, 'Incorrecta', 'green');
-
                     }
-
-
-
                 });
-
         })
-
         .catch(Sequelize.ValidationError, error => {
-
             errorlog(socket, 'El quiz es erróneo:');
-
             error.errors.forEach(({message}) => errorlog(message));
-
         })
-
         .catch(error => {
-
             errorlog(socket, error.message);
-
         })
-
         .then(() => {
-
             rl.prompt();
-
         });
-
 };
 
-
-
 /**
-
  * Pregunta todos los quizzes existentes en el modelo en orden aleatorio.
-
  * Se gana si se contesta a todos satisfactoriamente.
-
  */
-
-
-
 exports.playCmd = (socket, rl) => {
-
-
-
     let score = 0;
-
     let toBeResolved = [];
-
     const playOne = () => {
-
         return new Sequelize.Promise((resolve,reject) => {
-
             if(toBeResolved.length <= 0){
-
                 log(socket, `\b FIN - Aciertos: ${score}`);
-
                 resolve();
-
                 rl.prompt();
-
             }
-
             let id = Math.floor(Math.random()*toBeResolved.length);
-
             let quiz = toBeResolved[id];
-
             toBeResolved.splice(id,1);
-
-
-
             makeQuestion(rl, colorize(quiz.question + '? ', 'red'))
-
                 .then(response => {
-
                     if(response.toLowerCase().trim() === quiz.answer.toLowerCase().trim()){
-
                         score++;
-
-                        log(socket, `\b CORRECTO - LLeva ${score} aciertos`);
-
+                        log(socket, `CORRECTO - LLeva ${score} aciertos`);
                         resolve(playOne());
-
                     } else {
-
-                        log(socket, `\b INCORRECTO - FIN - Aciertos: ${score}`);
-
+                        log(socket, `INCORRECTO.`); 
+                        log(socket, `Fin del examen. Aciertos:`); 
+                        biglog(socket, score, 'magenta'); 
                         resolve();
-
                         rl.prompt();
-
                     }
-
                 })
-
         })
-
     }
-
     models.quiz.findAll({raw: true})
-
         .then(quizzes => {
-
             toBeResolved = quizzes;
-
         })
-
         .then(() => {
-
             return playOne();
-
         })
-
         .catch(error => {
-
             log(socket, error);
-
         })
-
         .then(() => {
-
             rl.prompt();
-
         })
-
 };
-
-
-
-
-
-
-
 /**
-
  * Muestra los nombres de los autores de la practica.
-
  */
-
 exports.creditsCmd = (socket, rl) => {
-
    log(socket, 'Autora de la práctica:');
-
    log(socket, 'SYLWIA');
-
     rl.prompt();
-
 };
-
-/**
-
- * Terminar el programa.
-
- */
-
+/** 
+* Terminar el programa.
+*/
 exports.quitCmd = (socket, rl) => {
-
     rl.close();
-
     socket.end();
-
 };
